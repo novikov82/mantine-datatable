@@ -77,7 +77,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         // Limit deltaX to respect both columns' minimum widths
         const constrainedDelta = Math.max(
           -maxShrinkCurrent, // Don't shrink current below minimum
-          Math.min(deltaX, maxShrinkNext) // Don't shrink next below minimum
+          Math.min(deltaX/*, maxShrinkNext*/) // Don't shrink next below minimum
         );
 
         const finalCurrentWidth = originalWidthsRef.current.current + constrainedDelta;
@@ -85,13 +85,13 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
         // Apply to DOM immediately for smooth visual feedback
         currentCol.style.width = `${finalCurrentWidth}px`;
-        nextCol.style.width = `${finalNextWidth}px`;
+        //nextCol.style.width = `${finalNextWidth}px`;
 
         // Force the table layout to recalculate
         currentCol.style.minWidth = `${finalCurrentWidth}px`;
         currentCol.style.maxWidth = `${finalCurrentWidth}px`;
-        nextCol.style.minWidth = `${finalNextWidth}px`;
-        nextCol.style.maxWidth = `${finalNextWidth}px`;
+        //nextCol.style.minWidth = `${finalNextWidth}px`;
+        //nextCol.style.maxWidth = `${finalNextWidth}px`;
       };
 
       const handleMouseUp = () => {
@@ -116,10 +116,10 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         if (nextCol && !isNextSelection) {
           const nextAccessor = nextCol.getAttribute('data-accessor');
           if (nextAccessor) {
-            updates.push({
-              accessor: nextAccessor,
-              width: `${finalNextWidth}px`,
-            });
+            // updates.push({
+            //   accessor: nextAccessor,
+            //   width: `${finalNextWidth}px`,
+            // });
           }
         }
 
