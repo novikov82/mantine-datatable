@@ -135,11 +135,11 @@ export function DataTableHeaderCell<T>({
         className
       )}
       style={[
-        {
+        resizable ? {
           width,
           minWidth: width,
           maxWidth: width,
-        },
+        } : {},
         style,
       ]}
       role={sortable ? 'button' : undefined}
