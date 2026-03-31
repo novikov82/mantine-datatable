@@ -9,6 +9,7 @@ import type { useRowExpansion } from './hooks';
 import type {
   DataTableCellClickHandler,
   DataTableColumn,
+  DataTableColumnResizeMode,
   DataTableDefaultColumnProps,
   DataTableProps,
   DataTableRowClickHandler,
@@ -37,6 +38,7 @@ type DataTableRowProps<T> = {
   onCellClick: DataTableCellClickHandler<T> | undefined;
   onCellDoubleClick: DataTableCellClickHandler<T> | undefined;
   onCellContextMenu: DataTableCellClickHandler<T> | undefined;
+  columnResizeMode: DataTableColumnResizeMode;
   expansion: ReturnType<typeof useRowExpansion<T>>;
   customAttributes?: (record: T, index: number) => Record<string, unknown>;
   color:
@@ -59,6 +61,7 @@ export function DataTableRow<T>({
   columns,
   defaultColumnProps,
   defaultColumnRender,
+  columnResizeMode,
   selectionTrigger,
   selectionVisible,
   selectionChecked,
@@ -125,6 +128,7 @@ export function DataTableRow<T>({
             visibleMediaQuery={visibleMediaQuery}
             record={record}
             index={index}
+            columnResizeMode={columnResizeMode}
             onClick={
               onCellClick
                 ? (event) => onCellClick({ event, record, index, column: columnProps, columnIndex })

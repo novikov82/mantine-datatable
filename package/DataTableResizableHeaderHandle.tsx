@@ -1,14 +1,16 @@
 import type { RefObject } from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { useDataTableColumnsContext } from './DataTableColumns.context';
+import type { DataTableColumnResizeMode } from './types';
 
 type DataTableResizableHeaderHandleProps = {
   accessor: string;
   columnRef: RefObject<HTMLTableCellElement | null>;
+  columnResizeMode: DataTableColumnResizeMode;
 };
 
 export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHandleProps) => {
-  const { accessor, columnRef } = props;
+  const { accessor, columnRef, columnResizeMode } = props;
   const [isResizing, setIsResizing] = useState(false);
   const startXRef = useRef<number>(0);
   const originalWidthsRef = useRef<{ current: number; next: number }>({ current: 0, next: 0 });
@@ -24,27 +26,32 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
       const currentColumn = columnRef.current;
 
-      // Find the next resizable data column (skip selection column)
-      let nextColumn = currentColumn.nextElementSibling as HTMLTableCellElement | null;
-      while (nextColumn) {
-        const nextAccessor = nextColumn.getAttribute('data-accessor');
-        if (nextAccessor && nextAccessor !== '__selection__') {
-          break; // Found a valid data column
+      // In `adjacent` mode we resize current + next (keep table width constant).
+      // In `self` mode we resize only current (table may grow/shrink).
+      let nextColumn: HTMLTableCellElement | null = null;
+      let isNextSelection = false;
+      if (columnResizeMode === 'adjacent') {
+        // Find the next data column (skip selection column)
+        nextColumn = currentColumn.nextElementSibling as HTMLTableCellElement | null;
+        while (nextColumn) {
+          const nextAccessor = nextColumn.getAttribute('data-accessor');
+          if (nextAccessor && nextAccessor !== '__selection__') {
+            break;
+          }
+          nextColumn = nextColumn.nextElementSibling as HTMLTableCellElement | null;
         }
-        nextColumn = nextColumn.nextElementSibling as HTMLTableCellElement | null;
-      }
 
-      if (!nextColumn) {
-        return; // No next column to resize with
-      }
+        if (!nextColumn) {
+          return; // No next column to resize with
+        }
 
-      const nextAccessor = nextColumn.getAttribute('data-accessor');
-      if (!nextAccessor) {
-        return; // Next column missing data-accessor
-      }
+        const nextAccessor = nextColumn.getAttribute('data-accessor');
+        if (!nextAccessor) {
+          return;
+        }
 
-      // Special handling for next column being selection column
-      const isNextSelection = nextAccessor === '__selection__';
+        isNextSelection = nextAccessor === '__selection__';
+      }
 
       // Store initial state
       setIsResizing(true);
@@ -52,7 +59,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
       // Get current computed widths (not getBoundingClientRect which might include borders/padding)
       const currentWidth = currentColumn.offsetWidth;
-      const nextWidth = nextColumn.offsetWidth;
+      const nextWidth = nextColumn?.offsetWidth ?? 0;
 
       originalWidthsRef.current = {
         current: currentWidth,
@@ -64,8 +71,8 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         if (!columnRef.current) return;
 
         const currentCol = columnRef.current;
-        const nextCol = currentCol.nextElementSibling as HTMLTableCellElement | null;
-        if (!nextCol) return;
+        const nextCol =
+          columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
         const deltaX = moveEvent.clientX - startXRef.current;
         const minWidth = 50;
@@ -74,31 +81,40 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         const maxShrinkCurrent = originalWidthsRef.current.current - minWidth;
         const maxShrinkNext = originalWidthsRef.current.next - minWidth;
 
-        // Limit deltaX to respect both columns' minimum widths
-        const constrainedDelta = Math.max(
-          -maxShrinkCurrent, // Don't shrink current below minimum
-          Math.min(deltaX, maxShrinkNext) // Don't shrink next below minimum
-        );
+        const constrainedDelta =
+          columnResizeMode === 'adjacent'
+            ? // Limit deltaX to respect both columns' minimum widths
+              Math.max(
+                -maxShrinkCurrent, // Don't shrink current below minimum
+                Math.min(deltaX, maxShrinkNext) // Don't shrink next below minimum
+              )
+            : // Only ensure current respects minimum width
+              Math.max(deltaX, -maxShrinkCurrent);
 
         const finalCurrentWidth = originalWidthsRef.current.current + constrainedDelta;
         const finalNextWidth = originalWidthsRef.current.next - constrainedDelta;
 
         // Apply to DOM immediately for smooth visual feedback
         currentCol.style.width = `${finalCurrentWidth}px`;
-        nextCol.style.width = `${finalNextWidth}px`;
+        if (columnResizeMode === 'adjacent' && nextCol) {
+          nextCol.style.width = `${finalNextWidth}px`;
+        }
 
         // Force the table layout to recalculate
         currentCol.style.minWidth = `${finalCurrentWidth}px`;
         currentCol.style.maxWidth = `${finalCurrentWidth}px`;
-        nextCol.style.minWidth = `${finalNextWidth}px`;
-        nextCol.style.maxWidth = `${finalNextWidth}px`;
+        if (columnResizeMode === 'adjacent' && nextCol) {
+          nextCol.style.minWidth = `${finalNextWidth}px`;
+          nextCol.style.maxWidth = `${finalNextWidth}px`;
+        }
       };
 
       const handleMouseUp = () => {
         if (!columnRef.current) return;
 
         const currentCol = columnRef.current;
-        const nextCol = currentCol.nextElementSibling as HTMLTableCellElement | null;
+        const nextCol =
+          columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
         setIsResizing(false);
 
@@ -113,7 +129,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         // Update context with final widths
         const updates = [{ accessor, width: `${finalCurrentWidth}px` }];
 
-        if (nextCol && !isNextSelection) {
+        if (columnResizeMode === 'adjacent' && nextCol && !isNextSelection) {
           const nextAccessor = nextCol.getAttribute('data-accessor');
           if (nextAccessor) {
             updates.push({
@@ -141,14 +157,15 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
-    [accessor, setMultipleColumnWidths]
+    [accessor, columnRef, columnResizeMode, setMultipleColumnWidths]
   );
 
   const handleDoubleClick = useCallback(() => {
     if (!columnRef.current) return;
 
     const currentColumn = columnRef.current;
-    const nextColumn = currentColumn.nextElementSibling as HTMLTableCellElement | null;
+    const nextColumn =
+      columnResizeMode === 'adjacent' ? (currentColumn.nextElementSibling as HTMLTableCellElement | null) : null;
 
     // Reset styles immediately
     currentColumn.style.width = '';
@@ -157,7 +174,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
     const updates = [{ accessor, width: 'initial' }];
 
-    if (nextColumn) {
+    if (columnResizeMode === 'adjacent' && nextColumn) {
       nextColumn.style.width = '';
       nextColumn.style.minWidth = '';
       nextColumn.style.maxWidth = '';
@@ -173,7 +190,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
     setTimeout(() => {
       setMultipleColumnWidths(updates);
     }, 0);
-  }, [accessor, setMultipleColumnWidths]);
+  }, [accessor, columnRef, columnResizeMode, setMultipleColumnWidths]);
 
   return (
     <div

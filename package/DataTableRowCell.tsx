@@ -1,7 +1,7 @@
 import { TableTd, type MantineStyleProp } from '@mantine/core';
 import clsx from 'clsx';
 import { useMediaQueryStringOrFunction } from './hooks';
-import type { DataTableColumn } from './types';
+import type { DataTableColumn, DataTableColumnResizeMode } from './types';
 import {
   CONTEXT_MENU_CURSOR,
   ELLIPSIS,
@@ -18,6 +18,7 @@ type DataTableRowCellProps<T> = {
   style: MantineStyleProp | undefined;
   record: T;
   index: number;
+  columnResizeMode: DataTableColumnResizeMode;
   defaultRender:
     | ((record: T, index: number, accessor: keyof T | (string & NonNullable<unknown>)) => React.ReactNode)
     | undefined;
@@ -35,6 +36,7 @@ export function DataTableRowCell<T>({
   visibleMediaQuery,
   record,
   index,
+  columnResizeMode,
   onClick,
   onDoubleClick,
   onContextMenu,
@@ -48,6 +50,16 @@ export function DataTableRowCell<T>({
   customCellAttributes,
 }: DataTableRowCellProps<T>) {
   if (!useMediaQueryStringOrFunction(visibleMediaQuery)) return null;
+
+  const widthStyle =
+    columnResizeMode === 'self' || width == null
+      ? undefined
+      : {
+          width,
+          minWidth: width,
+          maxWidth: width,
+        };
+
   return (
     <TableTd
       className={clsx(
@@ -62,14 +74,7 @@ export function DataTableRowCell<T>({
         },
         className
       )}
-      style={[
-        {
-          width,
-          minWidth: width,
-          maxWidth: width,
-        },
-        style,
-      ]}
+      style={[widthStyle, style]}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}

@@ -1,6 +1,7 @@
 export * from './DataTableCellClickHandler';
 export * from './DataTableColumn';
 export * from './DataTableColumnGroup';
+export * from './DataTableColumnResizeMode';
 export * from './DataTableColumnTextAlign';
 export * from './DataTableDefaultColumnProps';
 export * from './DataTableDraggableRowProps';

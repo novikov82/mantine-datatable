@@ -9,6 +9,7 @@ import type {
 import type { DataTableCellClickHandler } from './DataTableCellClickHandler';
 import type { DataTableColorProps } from './DataTableColorProps';
 import type { DataTableColumnProps } from './DataTableColumnProps';
+import type { DataTableColumnResizeMode } from './DataTableColumnResizeMode';
 import type { DataTableDefaultColumnProps } from './DataTableDefaultColumnProps';
 import type { DataTableEmptyStateProps } from './DataTableEmptyStateProps';
 import type { DataTableLoaderProps } from './DataTableLoaderProps';
@@ -83,6 +84,16 @@ export type DataTableProps<T = Record<string, unknown>> = {
    * If true, will show a loader with semi-transparent background, centered over the table.
    */
   fetching?: boolean;
+
+  /**
+   * Defines how column resizing affects the table layout.
+   *
+   * - `adjacent`: resizing a column also resizes the next one, keeping the table width constant.
+   * - `self`: resizing affects only the current column, allowing the table to grow/shrink (useful for very wide tables).
+   *
+   * @default `adjacent`
+   */
+  columnResizeMode?: DataTableColumnResizeMode;
 
   /**
    * If true, the first column will be pinned to the left side of the table.

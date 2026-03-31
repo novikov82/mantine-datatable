@@ -9,7 +9,7 @@ import { IconArrowUp } from './icons/IconArrowUp';
 import { IconArrowsVertical } from './icons/IconArrowsVertical';
 import { IconGripVertical } from './icons/IconGripVertical';
 import { IconX } from './icons/IconX';
-import type { DataTableColumn, DataTableSortProps } from './types';
+import type { DataTableColumn, DataTableColumnResizeMode, DataTableSortProps } from './types';
 import { ELLIPSIS, NOWRAP, TEXT_ALIGN_CENTER, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT } from './utilityClasses';
 import { humanize } from './utils';
 
@@ -21,6 +21,7 @@ type DataTableHeaderCellProps<T> = {
   sortStatus: DataTableSortProps<T>['sortStatus'];
   sortIcons: DataTableSortProps<T>['sortIcons'];
   onSortStatusChange: DataTableSortProps<T>['onSortStatusChange'];
+  columnResizeMode: DataTableColumnResizeMode;
 } & Pick<
   DataTableColumn<T>,
   | 'accessor'
@@ -57,6 +58,7 @@ export function DataTableHeaderCell<T>({
   filterPopoverDisableClickOutside,
   filtering,
   sortKey,
+  columnResizeMode,
 }: DataTableHeaderCellProps<T>) {
   const { setSourceColumn, setTargetColumn, swapColumns, setColumnsToggle } = useDataTableColumnsContext();
   const [dragOver, setDragOver] = useState<boolean>(false);
@@ -123,6 +125,18 @@ export function DataTableHeaderCell<T>({
     );
   };
 
+  const widthStyle =
+    width != null
+      ? columnResizeMode === 'self'
+        ? resizable
+          ? { width, minWidth: width, maxWidth: width }
+          : {}
+        : {
+            width,
+            ...(!resizable ? { minWidth: width, maxWidth: width } : { minWidth: '1px' }),
+          }
+      : undefined;
+
   return (
     <TableTh
       data-accessor={accessor}
@@ -134,13 +148,7 @@ export function DataTableHeaderCell<T>({
         },
         className
       )}
-      style={[
-        {
-          width,
-          ...(!resizable ? { minWidth: width, maxWidth: width } : { minWidth: '1px' }),
-        },
-        style,
-      ]}
+      style={[widthStyle, style]}
       role={sortable ? 'button' : undefined}
       tabIndex={sortable ? 0 : undefined}
       onClick={sortAction}
@@ -233,7 +241,11 @@ export function DataTableHeaderCell<T>({
         ) : null}
       </Group>
       {resizable && accessor !== '__selection__' ? (
-        <DataTableResizableHeaderHandle accessor={accessor as string} columnRef={columnRef} />
+        <DataTableResizableHeaderHandle
+          accessor={accessor as string}
+          columnRef={columnRef}
+          columnResizeMode={columnResizeMode}
+        />
       ) : null}
     </TableTh>
   );

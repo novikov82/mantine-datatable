@@ -17,7 +17,13 @@ import { useDataTableColumnsContext } from './DataTableColumns.context';
 import { DataTableHeaderCell } from './DataTableHeaderCell';
 import { DataTableHeaderSelectorCell } from './DataTableHeaderSelectorCell';
 import type { DataTableColumnToggle } from './hooks';
-import type { DataTableColumn, DataTableColumnGroup, DataTableSelectionTrigger, DataTableSortProps } from './types';
+import type {
+  DataTableColumn,
+  DataTableColumnGroup,
+  DataTableColumnResizeMode,
+  DataTableSelectionTrigger,
+  DataTableSortProps,
+} from './types';
 import { humanize } from './utils';
 
 type DataTableHeaderProps<T> = {
@@ -27,6 +33,7 @@ type DataTableHeaderProps<T> = {
   sortStatus: DataTableSortProps<T>['sortStatus'];
   sortIcons: DataTableSortProps<T>['sortIcons'];
   onSortStatusChange: DataTableSortProps<T>['onSortStatusChange'];
+  columnResizeMode: DataTableColumnResizeMode;
   columns: DataTableColumn<T>[];
   defaultColumnProps: Omit<DataTableColumn<T>, 'accessor'> | undefined;
   groups: readonly DataTableColumnGroup<T>[] | undefined;
@@ -49,6 +56,7 @@ export function DataTableHeader<T>({
   sortStatus,
   sortIcons,
   onSortStatusChange,
+  columnResizeMode,
   columns,
   defaultColumnProps,
   groups,
@@ -147,6 +155,7 @@ export function DataTableHeader<T>({
               sortable={sortable}
               draggable={draggable}
               toggleable={toggleable}
+              columnResizeMode={columnResizeMode}
               // we won't display the resize handle for the last column to avoid overflow render issues
               resizable={resizable && index < columns.length - 1}
               sortStatus={sortStatus}

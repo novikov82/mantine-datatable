@@ -10,6 +10,7 @@ export default function ResizingExample() {
 
   const [withTableBorder, setWithTableBorder] = useState<boolean>(true);
   const [withColumnBorders, setWithColumnBorders] = useState<boolean>(true);
+  const [columnResizeMode, setColumnResizeMode] = useState<'adjacent' | 'self'>('adjacent');
 
   const { effectiveColumns, resetColumnsWidth } = useDataTableColumns<Company>({
     key,
@@ -27,6 +28,8 @@ export default function ResizingExample() {
         withTableBorder={withTableBorder}
         withColumnBorders={withColumnBorders}
         storeColumnsKey={key}
+        columnResizeMode={columnResizeMode}
+        scrollAreaProps={{ type: 'always', scrollbarSize: 10 }}
         records={companies}
         columns={effectiveColumns}
       />
@@ -43,6 +46,12 @@ export default function ResizingExample() {
             onChange={(event) => setWithColumnBorders(event.currentTarget.checked)}
             labelPosition="left"
             label="Column Borders"
+          />
+          <Switch
+            checked={columnResizeMode === 'self'}
+            onChange={(event) => setColumnResizeMode(event.currentTarget.checked ? 'self' : 'adjacent')}
+            labelPosition="left"
+            label="Resize mode: self"
           />
         </Group>
         <Group justify="right">
