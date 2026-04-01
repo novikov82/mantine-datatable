@@ -86,14 +86,6 @@
 .mantine-datatable-resizable-columns.mantine-datatable-column-resize-mode-self {
   table-layout: auto;
   width: max-content;
-  min-width: 100%;
-}
-
-.mantine-datatable-table.mantine-datatable-column-resize-mode-self {
-  th:last-of-type,
-  td:last-of-type {
-    width: 100%;
-  }
 }
 
 .mantine-datatable-resizable-columns th {

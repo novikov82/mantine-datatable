@@ -306,6 +306,7 @@ export function DataTable<T>({
                   'mantine-datatable-pin-last-column': pinLastColumn,
                   'mantine-datatable-selection-column-visible': selectionColumnVisible,
                   'mantine-datatable-pin-first-column': pinFirstColumn,
+                  'mantine-datatable-resizable-columns': dragToggle.hasResizableColumns && fixedLayoutEnabled,
                   'mantine-datatable-column-resize-mode-self': columnResizeMode === 'self',
                 },
                 classNames?.table

@@ -51,9 +51,10 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
         const nextAccessor = nextColumn.getAttribute('data-accessor');
         if (!nextAccessor) {
-          return;
+          return; // Next column missing data-accessor
         }
 
+        // Special handling for next column being selection column
         isNextSelection = nextAccessor === '__selection__';
       }
 
