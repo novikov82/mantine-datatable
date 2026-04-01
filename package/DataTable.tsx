@@ -1,7 +1,8 @@
 import { Box, Table, type MantineSize } from '@mantine/core';
 import { useMergedRef } from '@mantine/hooks';
 import clsx from 'clsx';
-import { useCallback, useMemo } from 'react';
+import type { RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DataTableColumnsProvider } from './DataTableDragToggleProvider';
 import { DataTableEmptyRow } from './DataTableEmptyRow';
 import { DataTableEmptyState } from './DataTableEmptyState';
@@ -20,7 +21,7 @@ import {
 } from './hooks';
 import type { DataTableProps } from './types';
 import { TEXT_SELECTION_DISABLED } from './utilityClasses';
-import { differenceBy, getRecordId, uniqBy } from './utils';
+import { differenceBy, flattenColumns, getRecordId, uniqBy } from './utils';
 
 export function DataTable<T>({
   withTableBorder,
@@ -76,6 +77,8 @@ export function DataTable<T>({
     }
     return {};
   },
+  getPaginationItemProps,
+  renderPagination,
   loaderBackgroundBlur,
   customLoader,
   loaderSize,
@@ -132,17 +135,12 @@ export function DataTable<T>({
   ...otherProps
 }: DataTableProps<T>) {
   const effectiveColumns = useMemo(() => {
-    return groups?.flatMap((group) => group.columns) ?? columns!;
+    return groups ? flattenColumns(groups) : columns!;
   }, [columns, groups]);
 
-  const hasResizableColumns = useMemo(() => {
-    return effectiveColumns.some((col) => col.resizable);
-  }, [effectiveColumns]);
-
-  const dragToggle = useDataTableColumns({
-    key: storeColumnsKey,
-    columns: effectiveColumns,
-  });
+  // When columns are resizable, start with auto layout to let the browser
+  // compute natural widths, then capture them and switch to fixed layout.
+  const [fixedLayoutEnabled, setFixedLayoutEnabled] = useState(false);
 
   const { refs, onScroll: handleScrollPositionChange } = useDataTableInjectCssVariables({
     scrollCallbacks: {
@@ -155,20 +153,60 @@ export function DataTable<T>({
     withRowBorders: otherProps.withRowBorders,
   });
 
+  const dragToggle = useDataTableColumns({
+    key: storeColumnsKey,
+    columns: effectiveColumns,
+    headerRef: refs.header as RefObject<HTMLTableSectionElement | null>,
+    scrollViewportRef: refs.scrollViewport as RefObject<HTMLElement | null>,
+    onFixedLayoutChange: setFixedLayoutEnabled,
+  });
+
   const mergedTableRef = useMergedRef(refs.table, tableRef);
   const mergedViewportRef = useMergedRef(refs.scrollViewport, scrollViewportRef);
-
   const rowExpansionInfo = useRowExpansion<T>({ rowExpansion, records, idAccessor });
 
+  // Track when we should reset scroll due to pagination, but defer until data is rendered
+  const resetScrollPending = useRef(false);
+  const prevPageRef = useRef(page);
+  const recordsAtPageChangeRef = useRef<typeof records | undefined>(records);
+
   const handlePageChange = useCallback(
-    (page: number) => {
-      refs.scrollViewport.current?.scrollTo({ top: 0, left: 0 });
-      onPageChange!(page);
+    (newPage: number) => {
+      resetScrollPending.current = true;
+      recordsAtPageChangeRef.current = records;
+      onPageChange!(newPage);
     },
-    [onPageChange, refs.scrollViewport]
+    [onPageChange, records]
   );
 
+  // Handle externally-driven page changes
+  useEffect(() => {
+    if (prevPageRef.current !== page) {
+      resetScrollPending.current = true;
+      recordsAtPageChangeRef.current = records;
+      prevPageRef.current = page;
+    }
+  }, [page, records]);
+
   const recordsLength = records?.length;
+
+  // Reset scroll position when changing pages (sync) or when records change (async)
+  useLayoutEffect(() => {
+    if (!resetScrollPending.current) return;
+    if (fetching) return;
+    if (records === recordsAtPageChangeRef.current) return;
+
+    const viewport = refs.scrollViewport.current;
+    if (!viewport) return;
+
+    const raf = requestAnimationFrame(() => {
+      viewport.scrollTo({ top: 0, left: 0 });
+      resetScrollPending.current = false;
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [fetching, records, refs.scrollViewport]);
+
   const recordIds = records?.map((record) => getRecordId(record, idAccessor));
   const selectionColumnVisible = !!selectedRecords;
   const selectedRecordIds = selectedRecords?.map((record) => getRecordId(record, idAccessor));
@@ -268,7 +306,6 @@ export function DataTable<T>({
                   'mantine-datatable-pin-last-column': pinLastColumn,
                   'mantine-datatable-selection-column-visible': selectionColumnVisible,
                   'mantine-datatable-pin-first-column': pinFirstColumn,
-                  'mantine-datatable-resizable-columns': hasResizableColumns,
                   'mantine-datatable-column-resize-mode-self': columnResizeMode === 'self',
                 },
                 classNames?.table
@@ -303,6 +340,7 @@ export function DataTable<T>({
                     selectorCellShadowVisible={selectorCellShadowVisible}
                     selectionColumnClassName={selectionColumnClassName}
                     selectionColumnStyle={selectionColumnStyle}
+                    withColumnBorders={otherProps.withColumnBorders}
                   />
                 </DataTableColumnsProvider>
               )}
@@ -399,8 +437,7 @@ export function DataTable<T>({
             </Table>
           </TableWrapper>
         </DataTableScrollArea>
-
-        {page && (
+        {!!(page && recordsLength) && (
           <DataTablePagination
             className={classNames?.pagination}
             style={styles?.pagination}
@@ -421,9 +458,11 @@ export function DataTable<T>({
             paginationText={paginationText}
             paginationWrapBreakpoint={paginationWrapBreakpoint}
             getPaginationControlProps={getPaginationControlProps}
+            getPaginationItemProps={getPaginationItemProps}
             noRecordsText={noRecordsText}
             loadingText={loadingText}
             recordsLength={recordsLength}
+            renderPagination={renderPagination}
           />
         )}
         <DataTableLoader

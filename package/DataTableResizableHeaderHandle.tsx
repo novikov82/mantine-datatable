@@ -1,3 +1,4 @@
+import { useDirection } from '@mantine/core';
 import type { RefObject } from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { useDataTableColumnsContext } from './DataTableColumns.context';
@@ -14,6 +15,9 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
   const [isResizing, setIsResizing] = useState(false);
   const startXRef = useRef<number>(0);
   const originalWidthsRef = useRef<{ current: number; next: number }>({ current: 0, next: 0 });
+
+  const { dir } = useDirection();
+  const isRTL = dir === 'rtl';
 
   const { setMultipleColumnWidths } = useDataTableColumnsContext();
 
@@ -74,7 +78,13 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         const nextCol =
           columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
-        const deltaX = moveEvent.clientX - startXRef.current;
+        let deltaX = moveEvent.clientX - startXRef.current;
+
+        // In RTL, reverse the deltaX to make resizing follow mouse movement naturally
+        if (isRTL) {
+          deltaX = -deltaX;
+        }
+
         const minWidth = 50;
 
         // Calculate the maximum possible movement in both directions
@@ -100,7 +110,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
           nextCol.style.width = `${finalNextWidth}px`;
         }
 
-        // Force the table layout to recalculate
+        // Ensure the table maintains fixed layout during resize
         currentCol.style.minWidth = `${finalCurrentWidth}px`;
         currentCol.style.maxWidth = `${finalCurrentWidth}px`;
         if (columnResizeMode === 'adjacent' && nextCol) {
@@ -157,7 +167,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
-    [accessor, columnRef, columnResizeMode, setMultipleColumnWidths]
+    [accessor, columnRef, columnResizeMode, isRTL, setMultipleColumnWidths]
   );
 
   const handleDoubleClick = useCallback(() => {
@@ -167,12 +177,13 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
     const nextColumn =
       columnResizeMode === 'adjacent' ? (currentColumn.nextElementSibling as HTMLTableCellElement | null) : null;
 
-    // Reset styles immediately
+    // Clear any inline styles that might interfere with natural sizing
     currentColumn.style.width = '';
     currentColumn.style.minWidth = '';
     currentColumn.style.maxWidth = '';
 
-    const updates = [{ accessor, width: 'initial' }];
+    // Reset current column to auto width
+    const updates = [{ accessor, width: 'auto' }];
 
     if (columnResizeMode === 'adjacent' && nextColumn) {
       nextColumn.style.width = '';
@@ -180,9 +191,9 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
       nextColumn.style.maxWidth = '';
 
       const nextAccessor = nextColumn.getAttribute('data-accessor');
-      // Only add to updates if it's not the selection column
+      // Only reset next column if it's not the selection column
       if (nextAccessor && nextAccessor !== '__selection__') {
-        updates.push({ accessor: nextAccessor, width: 'initial' });
+        updates.push({ accessor: nextAccessor, width: 'auto' });
       }
     }
 

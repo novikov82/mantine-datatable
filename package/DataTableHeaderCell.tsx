@@ -125,18 +125,6 @@ export function DataTableHeaderCell<T>({
     );
   };
 
-  const widthStyle =
-    width != null
-      ? columnResizeMode === 'self'
-        ? resizable
-          ? { width, minWidth: width, maxWidth: width }
-          : {}
-        : {
-            width,
-            ...(!resizable ? { minWidth: width, maxWidth: width } : { minWidth: '1px' }),
-          }
-      : undefined;
-
   return (
     <TableTh
       data-accessor={accessor}
@@ -148,7 +136,13 @@ export function DataTableHeaderCell<T>({
         },
         className
       )}
-      style={[widthStyle, style]}
+      style={[
+        {
+          width,
+          ...(!resizable ? { minWidth: width, maxWidth: width } : {}),
+        },
+        style,
+      ]}
       role={sortable ? 'button' : undefined}
       tabIndex={sortable ? 0 : undefined}
       onClick={sortAction}
