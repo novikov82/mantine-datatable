@@ -91,7 +91,7 @@ export function DataTable<T>({
   highlightOnHover,
   striped,
   noHeader,
-  columnResizeMode = 'adjacent',
+  tableLayout = 'fixed',
   onRowClick,
   onRowDoubleClick,
   onRowContextMenu,
@@ -307,7 +307,7 @@ export function DataTable<T>({
                   'mantine-datatable-selection-column-visible': selectionColumnVisible,
                   'mantine-datatable-pin-first-column': pinFirstColumn,
                   'mantine-datatable-resizable-columns': dragToggle.hasResizableColumns && fixedLayoutEnabled,
-                  'mantine-datatable-column-resize-mode-self': columnResizeMode === 'self',
+                  'mantine-datatable-table-layout-auto': tableLayout === 'auto',
                 },
                 classNames?.table
               )}
@@ -331,7 +331,7 @@ export function DataTable<T>({
                     sortStatus={sortStatus}
                     sortIcons={sortIcons}
                     onSortStatusChange={onSortStatusChange}
-                    columnResizeMode={columnResizeMode}
+                    tableLayout={tableLayout}
                     selectionTrigger={selectionTrigger}
                     selectionVisible={selectionColumnVisible}
                     selectionChecked={allSelectableRecordsSelected}
@@ -391,7 +391,6 @@ export function DataTable<T>({
                         columns={effectiveColumns}
                         defaultColumnProps={defaultColumnProps}
                         defaultColumnRender={defaultColumnRender}
-                        columnResizeMode={columnResizeMode}
                         selectionTrigger={selectionTrigger}
                         selectionVisible={selectionColumnVisible}
                         selectionChecked={isSelected}

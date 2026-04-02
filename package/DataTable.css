@@ -83,7 +83,7 @@
   table-layout: fixed;
 }
 
-.mantine-datatable-resizable-columns.mantine-datatable-column-resize-mode-self {
+.mantine-datatable-resizable-columns.mantine-datatable-table-layout-auto {
   table-layout: auto;
   width: max-content;
 }

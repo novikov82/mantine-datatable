@@ -2,16 +2,16 @@ import { useDirection } from '@mantine/core';
 import type { RefObject } from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { useDataTableColumnsContext } from './DataTableColumns.context';
-import type { DataTableColumnResizeMode } from './types';
+import type { DataTableTableLayout } from './types';
 
 type DataTableResizableHeaderHandleProps = {
   accessor: string;
   columnRef: RefObject<HTMLTableCellElement | null>;
-  columnResizeMode: DataTableColumnResizeMode;
+  tableLayout: DataTableTableLayout;
 };
 
 export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHandleProps) => {
-  const { accessor, columnRef, columnResizeMode } = props;
+  const { accessor, columnRef, tableLayout } = props;
   const [isResizing, setIsResizing] = useState(false);
   const startXRef = useRef<number>(0);
   const originalWidthsRef = useRef<{ current: number; next: number }>({ current: 0, next: 0 });
@@ -31,11 +31,11 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
       const currentColumn = columnRef.current;
 
-      // In `adjacent` mode we resize current + next (keep table width constant).
-      // In `self` mode we resize only current (table may grow/shrink).
+      // In `fixed` layout we resize current + next (keep table width constant).
+      // In `auto` layout we resize only current (table may grow/shrink).
       let nextColumn: HTMLTableCellElement | null = null;
       let isNextSelection = false;
-      if (columnResizeMode === 'adjacent') {
+      if (tableLayout === 'fixed') {
         // Find the next data column (skip selection column)
         nextColumn = currentColumn.nextElementSibling as HTMLTableCellElement | null;
         while (nextColumn) {
@@ -86,7 +86,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
           cell.style.maxWidth = "0px";
         }
         const nextCol =
-          columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
+          tableLayout === 'fixed' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
         let deltaX = moveEvent.clientX - startXRef.current;
 
@@ -102,7 +102,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         const maxShrinkNext = originalWidthsRef.current.next - minWidth;
 
         const constrainedDelta =
-          columnResizeMode === 'adjacent'
+          tableLayout === 'fixed'
             ? // Limit deltaX to respect both columns' minimum widths
               Math.max(
                 -maxShrinkCurrent, // Don't shrink current below minimum
@@ -116,14 +116,14 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
         // Apply to DOM immediately for smooth visual feedback
         currentCol.style.width = `${finalCurrentWidth}px`;
-        if (columnResizeMode === 'adjacent' && nextCol) {
+        if (tableLayout === 'fixed' && nextCol) {
           nextCol.style.width = `${finalNextWidth}px`;
         }
 
         // Ensure the table maintains fixed layout during resize
         currentCol.style.minWidth = `${finalCurrentWidth}px`;
         currentCol.style.maxWidth = `${finalCurrentWidth}px`;
-        if (columnResizeMode === 'adjacent' && nextCol) {
+        if (tableLayout === 'fixed' && nextCol) {
           nextCol.style.minWidth = `${finalNextWidth}px`;
           nextCol.style.maxWidth = `${finalNextWidth}px`;
         }
@@ -134,7 +134,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
         const currentCol = columnRef.current;
         const nextCol =
-          columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
+          tableLayout === 'fixed' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
         setIsResizing(false);
 
@@ -149,7 +149,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         // Update context with final widths
         const updates = [{ accessor, width: `${finalCurrentWidth}px` }];
 
-        if (columnResizeMode === 'adjacent' && nextCol && !isNextSelection) {
+        if (tableLayout === 'fixed' && nextCol && !isNextSelection) {
           const nextAccessor = nextCol.getAttribute('data-accessor');
           if (nextAccessor) {
             updates.push({
@@ -177,7 +177,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     },
-    [accessor, columnRef, columnResizeMode, isRTL, setMultipleColumnWidths]
+    [accessor, columnRef, tableLayout, isRTL, setMultipleColumnWidths]
   );
 
   const handleDoubleClick = useCallback(() => {
@@ -185,7 +185,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
 
     const currentColumn = columnRef.current;
     const nextColumn =
-      columnResizeMode === 'adjacent' ? (currentColumn.nextElementSibling as HTMLTableCellElement | null) : null;
+      tableLayout === 'fixed' ? (currentColumn.nextElementSibling as HTMLTableCellElement | null) : null;
 
     // Clear any inline styles that might interfere with natural sizing
     currentColumn.style.width = '';
@@ -195,7 +195,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
     // Reset current column to auto width
     const updates = [{ accessor, width: 'auto' }];
 
-    if (columnResizeMode === 'adjacent' && nextColumn) {
+    if (tableLayout === 'fixed' && nextColumn) {
       nextColumn.style.width = '';
       nextColumn.style.minWidth = '';
       nextColumn.style.maxWidth = '';
@@ -211,7 +211,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
     setTimeout(() => {
       setMultipleColumnWidths(updates);
     }, 0);
-  }, [accessor, columnRef, columnResizeMode, setMultipleColumnWidths]);
+  }, [accessor, columnRef, tableLayout, setMultipleColumnWidths]);
 
   return (
     <div

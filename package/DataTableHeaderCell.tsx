@@ -9,7 +9,7 @@ import { IconArrowUp } from './icons/IconArrowUp';
 import { IconArrowsVertical } from './icons/IconArrowsVertical';
 import { IconGripVertical } from './icons/IconGripVertical';
 import { IconX } from './icons/IconX';
-import type { DataTableColumn, DataTableColumnResizeMode, DataTableSortProps } from './types';
+import type { DataTableColumn, DataTableSortProps, DataTableTableLayout } from './types';
 import { ELLIPSIS, NOWRAP, TEXT_ALIGN_CENTER, TEXT_ALIGN_LEFT, TEXT_ALIGN_RIGHT } from './utilityClasses';
 import { humanize } from './utils';
 
@@ -21,7 +21,7 @@ type DataTableHeaderCellProps<T> = {
   sortStatus: DataTableSortProps<T>['sortStatus'];
   sortIcons: DataTableSortProps<T>['sortIcons'];
   onSortStatusChange: DataTableSortProps<T>['onSortStatusChange'];
-  columnResizeMode: DataTableColumnResizeMode;
+  tableLayout: DataTableTableLayout;
 } & Pick<
   DataTableColumn<T>,
   | 'accessor'
@@ -58,7 +58,7 @@ export function DataTableHeaderCell<T>({
   filterPopoverDisableClickOutside,
   filtering,
   sortKey,
-  columnResizeMode,
+  tableLayout,
 }: DataTableHeaderCellProps<T>) {
   const { setSourceColumn, setTargetColumn, swapColumns, setColumnsToggle } = useDataTableColumnsContext();
   const [dragOver, setDragOver] = useState<boolean>(false);
@@ -238,7 +238,7 @@ export function DataTableHeaderCell<T>({
         <DataTableResizableHeaderHandle
           accessor={accessor as string}
           columnRef={columnRef}
-          columnResizeMode={columnResizeMode}
+          tableLayout={tableLayout}
         />
       ) : null}
     </TableTh>

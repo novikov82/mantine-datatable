@@ -1,7 +1,7 @@
 import { TableTd, type MantineStyleProp } from '@mantine/core';
 import clsx from 'clsx';
 import { useMediaQueryStringOrFunction } from './hooks';
-import type { DataTableColumn, DataTableColumnResizeMode } from './types';
+import type { DataTableColumn } from './types';
 import {
   CONTEXT_MENU_CURSOR,
   ELLIPSIS,
@@ -18,7 +18,6 @@ type DataTableRowCellProps<T> = {
   style: MantineStyleProp | undefined;
   record: T;
   index: number;
-  columnResizeMode: DataTableColumnResizeMode;
   defaultRender:
     | ((record: T, index: number, accessor: keyof T | (string & NonNullable<unknown>)) => React.ReactNode)
     | undefined;

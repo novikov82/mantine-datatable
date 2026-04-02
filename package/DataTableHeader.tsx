@@ -20,7 +20,7 @@ import type { DataTableColumnToggle } from './hooks';
 import type {
   DataTableColumn,
   DataTableColumnGroup,
-  DataTableColumnResizeMode,
+  DataTableTableLayout,
   DataTableSelectionTrigger,
   DataTableSortProps,
 } from './types';
@@ -33,7 +33,7 @@ type DataTableHeaderProps<T> = {
   sortStatus: DataTableSortProps<T>['sortStatus'];
   sortIcons: DataTableSortProps<T>['sortIcons'];
   onSortStatusChange: DataTableSortProps<T>['onSortStatusChange'];
-  columnResizeMode: DataTableColumnResizeMode;
+  tableLayout: DataTableTableLayout;
   columns: DataTableColumn<T>[];
   defaultColumnProps: Omit<DataTableColumn<T>, 'accessor'> | undefined;
   groups: readonly DataTableColumnGroup<T>[] | undefined;
@@ -57,7 +57,7 @@ export function DataTableHeader<T>({
   sortStatus,
   sortIcons,
   onSortStatusChange,
-  columnResizeMode,
+  tableLayout,
   columns,
   defaultColumnProps,
   groups,
@@ -176,10 +176,10 @@ export function DataTableHeader<T>({
               sortable={sortable}
               draggable={draggable}
               toggleable={toggleable}
-              columnResizeMode={columnResizeMode}
-              // In `adjacent` mode we hide the handle on the last column (no next column to pair with).
-              // In `self` mode the last column can be resized independently.
-              resizable={resizable && (columnResizeMode === 'self' || index < columns.length - 1)}
+              tableLayout={tableLayout}
+              // In `fixed` layout we hide the handle on the last column (no next column to pair with).
+              // In `auto` layout the last column can be resized independently.
+              resizable={resizable && (tableLayout === 'auto' || index < columns.length - 1)}
               sortStatus={sortStatus}
               sortIcons={sortIcons}
               sortKey={sortKey}

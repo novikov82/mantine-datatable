@@ -11,7 +11,7 @@ export default function ResizingExample() {
   const [resizable, setResizable] = useState<boolean>(true);
   const [withTableBorder, setWithTableBorder] = useState<boolean>(true);
   const [withColumnBorders, setWithColumnBorders] = useState<boolean>(true);
-  const [columnResizeMode, setColumnResizeMode] = useState<'adjacent' | 'self'>('adjacent');
+  const [tableLayout, setTableLayout] = useState<'fixed' | 'auto'>('fixed');
 
   const { effectiveColumns, resetColumnsWidth } = useDataTableColumns<Company>({
     key,
@@ -30,7 +30,7 @@ export default function ResizingExample() {
         withTableBorder={withTableBorder}
         withColumnBorders={withColumnBorders}
         storeColumnsKey={key}
-        columnResizeMode={columnResizeMode}
+        tableLayout={tableLayout}
         scrollAreaProps={{ type: 'always', scrollbarSize: 10 }}
         records={companies}
         columns={effectiveColumns}
@@ -56,10 +56,10 @@ export default function ResizingExample() {
             label="Column Borders"
           />
           <Switch
-            checked={columnResizeMode === 'self'}
-            onChange={(event) => setColumnResizeMode(event.currentTarget.checked ? 'self' : 'adjacent')}
+            checked={tableLayout === 'auto'}
+            onChange={(event) => setTableLayout(event.currentTarget.checked ? 'auto' : 'fixed')}
             labelPosition="left"
-            label="Resize mode: self"
+            label="Table layout: auto"
           />
         </Group>
         <Group justify="right">
