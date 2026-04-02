@@ -177,8 +177,9 @@ export function DataTableHeader<T>({
               draggable={draggable}
               toggleable={toggleable}
               columnResizeMode={columnResizeMode}
-              // we won't display the resize handle for the last column to avoid overflow render issues
-              resizable={resizable && index < columns.length - 1}
+              // In `adjacent` mode we hide the handle on the last column (no next column to pair with).
+              // In `self` mode the last column can be resized independently.
+              resizable={resizable && (columnResizeMode === 'self' || index < columns.length - 1)}
               sortStatus={sortStatus}
               sortIcons={sortIcons}
               sortKey={sortKey}
