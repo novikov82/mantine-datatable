@@ -36,7 +36,6 @@ export function DataTableRowCell<T>({
   visibleMediaQuery,
   record,
   index,
-  columnResizeMode,
   onClick,
   onDoubleClick,
   onContextMenu,
@@ -50,16 +49,6 @@ export function DataTableRowCell<T>({
   customCellAttributes,
 }: DataTableRowCellProps<T>) {
   if (!useMediaQueryStringOrFunction(visibleMediaQuery)) return null;
-
-  const widthStyle =
-    columnResizeMode === 'self' || width == null
-      ? undefined
-      : {
-          width,
-          minWidth: width,
-          maxWidth: width,
-        };
-
   return (
     <TableTd
       className={clsx(
@@ -74,7 +63,14 @@ export function DataTableRowCell<T>({
         },
         className
       )}
-      style={[widthStyle, style]}
+      style={[
+        {
+          width,
+          minWidth: width,
+          maxWidth: width,
+        },
+        style,
+      ]}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}

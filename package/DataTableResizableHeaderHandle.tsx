@@ -16,6 +16,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
   const startXRef = useRef<number>(0);
   const originalWidthsRef = useRef<{ current: number; next: number }>({ current: 0, next: 0 });
 
+
   const { dir } = useDirection();
   const isRTL = dir === 'rtl';
 
@@ -76,6 +77,14 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         if (!columnRef.current) return;
 
         const currentCol = columnRef.current;
+        const table = currentCol.closest('table');
+        const colIndex = currentCol.cellIndex;
+        for (const row of table?.rows ?? []) {
+          const cell = row.cells[colIndex];
+          cell.style.width = "0px";
+          cell.style.minWidth = "0px";
+          cell.style.maxWidth = "0px";
+        }
         const nextCol =
           columnResizeMode === 'adjacent' ? (currentCol.nextElementSibling as HTMLTableCellElement | null) : null;
 
