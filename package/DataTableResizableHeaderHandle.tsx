@@ -81,6 +81,7 @@ export const DataTableResizableHeaderHandle = (props: DataTableResizableHeaderHa
         const colIndex = currentCol.cellIndex;
         for (const row of table?.rows ?? []) {
           const cell = row.cells[colIndex];
+          if(!cell) continue;
           cell.style.width = "0px";
           cell.style.minWidth = "0px";
           cell.style.maxWidth = "0px";
